@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chat</title>
+  <link rel="stylesheet" href="index.css">
+
+</head>
+<body>
+
+  <img src="/img/banner.png" id="banner" alt="Banner">
+
+  <div id="chat-container">
+    <div id="messages"></div>
+    <form id="form">
+      <input id="nameInput" type="text" placeholder="Tu nombre..." autocomplete="off" />
+      <input id="imageInput" type="file" accept="image/*" style="display:none" />
+      <input id="input" type="text" placeholder="Mensaje..." autocomplete="off" />
+      <button type="button" id="imgButton">📎</button>
+      <button type="submit">Enviar</button>
+    </form>
+  </div>
+
+  <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+
+  <script src="server.js"></script>
+</body>
+</html>

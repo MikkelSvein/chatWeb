@@ -1,0 +1,127 @@
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+        font-family: system-ui, sans-serif;
+        background: #f0f2f5;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+        padding: 1rem;
+        gap: 1rem; /* espacio entre banner y chat */
+    }
+
+    body > img {
+      max-width: 640px;
+      width: 100%;
+      border-radius: 12px 12px 0 0;
+      display: block;
+    }
+
+    #chat-container {
+        width: 100%;
+        max-width: 640px;
+        height: 520px;
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px solid #e0e0e0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #messages p {
+      font-size: 14px;
+      line-height: 1.5;
+      color: #1a1a1a;
+      background: #f5f5f5;
+      padding: 10px 14px;
+      border-radius: 8px;
+      max-width: 85%;
+      width: fit-content;
+      border: 1px solid #ebebeb;
+    }
+
+    #messages p strong {
+      color: #185fa5;
+      font-weight: 500;
+      margin-right: 4px;
+    }
+
+    #form {
+      border-top: 1px solid #e0e0e0;
+      padding: 1rem;
+      display: flex;
+      gap: 8px;
+      background: #0276dcb8;
+    }
+
+    #nameInput {
+      width: 110px;
+      flex-shrink: 0;
+      font-size: 13px;
+      padding: 8px 10px;
+      border: 1px solid #d0d0d0;
+      border-radius: 8px;
+      background: #fff;
+      color: #1a1a1a;
+      outline: none;
+    }
+
+    #input {
+      flex: 1;
+      font-size: 14px;
+      padding: 8px 12px;
+      border: 1px solid #d0d0d0;
+      border-radius: 8px;
+      background: #fff;
+      color: #1a1a1a;
+      outline: none;
+    }
+
+    #nameInput:focus,
+    #input:focus {
+      border-color: #888;
+      box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.06);
+    }
+
+    #imgButton,
+    button[type="submit"] {
+      font-size: 13px;
+      padding: 8px 16px;
+      border: 1px solid #b5d4f4;
+      border-radius: 8px;
+      background: #e6f1fb;
+      color: #185fa5;
+      cursor: pointer;
+      font-weight: 500;
+      white-space: nowrap;
+      transition: opacity 0.15s;
+    }
+
+    #imgButton:hover,
+    button[type="submit"]:hover { opacity: 0.75; }
+
+    #imgButton:active,
+    button[type="submit"]:active { transform: scale(0.98); }
+
+    #banner {
+        max-width: 640px;
+        width: 100%;
+        height: auto;        /* responsive */
+        object-fit: contain;
+        display: block;
+    }

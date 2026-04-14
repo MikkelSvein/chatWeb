@@ -4,11 +4,10 @@
   <meta charset="UTF-8">
   <title>Chat</title>
   <link rel="stylesheet" href="index.css">
-
 </head>
 <body>
 
-  <img src="/img/banner.png" id="banner" alt="Banner">
+  <img src="/img/banner.png" alt="Banner">
 
   <div id="chat-container">
     <div id="messages"></div>
@@ -17,12 +16,188 @@
       <input id="imageInput" type="file" accept="image/*" style="display:none" />
       <input id="input" type="text" placeholder="Mensaje..." autocomplete="off" />
       <button type="button" id="imgButton">📎</button>
+
+      <!-- ✅ AÑADIDO: botón y panel de emojis -->
+      <button type="button" id="emojiButton">😊</button>
+      <div id="emojiPicker" style="display:none; position:absolute; bottom:70px; left:10px; background:#fff; border:1px solid #ddd; border-radius:8px; padding:8px; z-index:100; flex-wrap:wrap; width:260px;"></div>
+
+      <button type="button" id="audioButton">🎙️</button>
       <button type="submit">Enviar</button>
     </form>
   </div>
 
-  <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+  <script src="https://b2b91gkq-3000.use2.devtunnels.ms/socket.io/socket.io.js"></script>
 
-  <script src="server.js"></script>
+  <script>
+    const socket = io("https://b2b91gkq-3000.use2.devtunnels.ms")
+    const form = document.getElementById('form')
+    const input = document.getElementById('input')
+    const nameInput = document.getElementById('nameInput')
+    const messages = document.getElementById('messages')
+    const imageInput = document.getElementById('imageInput')
+    const imgButton = document.getElementById('imgButton')
+    const audioButton = document.getElementById('audioButton')
+
+    const emojiButton = document.getElementById('emojiButton')
+    const emojiPicker = document.getElementById('emojiPicker')
+
+    const EMOJIS = [
+      '😀','😂','😍','🥺','😎','🤔','😭','🔥','❤️','👍',
+      '🎉','😅','🤣','😊','🙏','💯','😢','😡','🤩','👏',
+      '😴','🥳','😏','🤗','💪','🤯','😬','🥹','💀','✨'
+    ]
+
+    EMOJIS.forEach(e => {
+      const btn = document.createElement('button')
+      btn.type = 'button'
+      btn.textContent = e
+      btn.style = 'font-size:22px;background:none;border:none;cursor:pointer;padding:4px;border-radius:4px;'
+      btn.addEventListener('click', () => {
+        input.value += e
+        input.focus()
+        emojiPicker.style.display = 'none'
+      })
+      emojiPicker.appendChild(btn)
+    })
+
+    emojiButton.addEventListener('click', () => {
+      emojiPicker.style.display =
+        emojiPicker.style.display === 'none' ? 'flex' : 'none'
+    })
+
+    document.addEventListener('click', (e) => {
+      if (!emojiButton.contains(e.target) && !emojiPicker.contains(e.target))
+        emojiPicker.style.display = 'none'
+    })
+    
+    let mediaRecorder = null
+    let audioChunks = []
+    let isRecording = false
+
+    nameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        input.focus()
+      }
+    })
+
+    imgButton.addEventListener('click', () => imageInput.click())
+
+    imageInput.addEventListener('change', () => {
+      const name = nameInput.value.trim()
+
+      if (!name) {
+        nameInput.focus()
+        return
+      }
+
+      const file = imageInput.files[0]
+      if (!file) return
+
+      if (file.size > 4 * 1024 * 1024) {
+        alert('La imagen es demasiado grande. Máximo 4 MB.')
+        imageInput.value = ''
+        return
+      }
+
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        socket.emit('message', { name, image: e.target.result })
+        imageInput.value = ''
+      }
+      reader.readAsDataURL(file)
+    })
+
+    audioButton.addEventListener('click', async () => {
+      const name = nameInput.value.trim()
+
+      if (!name) {
+        nameInput.focus()
+        return
+      }
+
+      if (!isRecording) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+          mediaRecorder = new MediaRecorder(stream)
+          audioChunks = []
+
+          mediaRecorder.addEventListener('dataavailable', (e) => {
+            if (e.data.size > 0) audioChunks.push(e.data)
+          })
+
+          mediaRecorder.addEventListener('stop', () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' })
+
+            if (audioBlob.size > 4 * 1024 * 1024) {
+              alert('El audio es demasiado largo. Máximo ~4 MB.')
+              return
+            }
+
+            const reader = new FileReader()
+            reader.onload = (e) => {
+              socket.emit('message', { name, audio: e.target.result })
+            }
+            reader.readAsDataURL(audioBlob)
+
+            stream.getTracks().forEach(track => track.stop())
+          })
+
+          mediaRecorder.start()
+          isRecording = true
+          audioButton.textContent = '⏹️'
+          audioButton.style.color = 'red'
+
+        } catch (err) {
+          alert('No se pudo acceder al micrófono: ' + err.message)
+        }
+
+      } else {
+        mediaRecorder.stop()
+        isRecording = false
+        audioButton.textContent = '🎙️'
+        audioButton.style.color = ''
+      }
+    })
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault()
+
+      const name = nameInput.value.trim()
+      const message = input.value.trim()
+
+      if (!name) {
+        nameInput.focus()
+        return
+      }
+
+      if (message) {
+        socket.emit('message', { name, message })
+        input.value = ''
+        input.focus()
+      }
+    })
+
+    socket.on('messages', (data) => {
+      const p = document.createElement('p')
+
+      if (data.image) {
+        p.innerHTML = `
+          <strong>${data.name}:</strong><br>
+          <img src="${data.image}" style="max-width:200px; border-radius:8px; margin-top:6px; display:block;" />
+        `
+      } else if (data.audio) {
+        p.innerHTML = `
+          <strong>${data.name}:</strong><br>
+          <audio controls src="${data.audio}" style="margin-top:6px; display:block;"></audio>
+        `
+      } else {
+        p.innerHTML = `<strong>${data.name}:</strong> ${data.message}`
+      }
+
+      messages.appendChild(p)
+      messages.scrollTop = messages.scrollHeight
+    })
+  </script>
 </body>
 </html>
